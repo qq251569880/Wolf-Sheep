@@ -10,14 +10,12 @@ import SpriteKit
 
 class GameScene: SKScene {
     
+    var game = WolfSheepGame();
     
     var boardPosition:CGPoint = CGPointMake(0,0);
     var boardSize:CGSize = CGSize(width: 0,height: 0);
     var backgroundBoard = SKSpriteNode();
-    
-    var sheep = [SKSpriteNode?](count:3*SHEEP_GROUP,repeatedValue:nil);
-    var wolf = [SKSpriteNode?](count:WOLF_NUMBER,repeatedValue:nil);
-    
+       
     
     override func didMoveToView(view: SKView) {
         /* Setup your scene here */
@@ -43,20 +41,25 @@ class GameScene: SKScene {
         boardPosition = backgroundBoard.position
         self.addChild(backgroundBoard)
         
+        game.delegate = self;
+
         //添加小羊3*3
         for i:Int in 0..<SHEEP_GROUP {
             var imageName:String = "sheep\(i+1)";
             for j:Int in 0..<3 {
                 var sheepTexture = SKTexture(imageNamed: imageName);
 
-                sheep[3*i+j] = SKSpriteNode(texture:sheepTexture);
-                println("sheep width:\(sheep[3*i+j]?.size.width),height:\(sheep[3*i+j]?.size.height)")
-                sheep[3*i+j]?.setScale(screen.bounds.size.width/boardSize.width*0.8);
+                game.sheep[3*i+j].sprite = SKSpriteNode(texture:sheepTexture);
+                println("sheep width:\(game.sheep[3*i+j].sprite.size.width),height:\(game.sheep[3*i+j].sprite.size.height)")
+                game.sheep[3*i+j].sprite.setScale(screen.bounds.size.width/boardSize.width*0.8);
                 //它的初始位置是25格的最左最下的方格。计算方法是以25格图中心点为参考
                 //羊占下方234格，每个格3只羊。
 
-                sheep[3*i+j]!.position = CGPointMake(boardPosition.x-boardSize.width/5*(3-ANIMAL_POSITION_ARRAY[i]),boardPosition.y-boardSize.height/6*2.5)
-                self.addChild(sheep[3*i+j]);
+                game.sheep[3*i+j].sprite.position = CGPointMake(boardPosition.x-boardSize.width/5*(3-ANIMAL_POSITION_ARRAY[i]),boardPosition.y-boardSize.height/6*2.5)
+                self.addChild(game.sheep[3*i+j].sprite);
+                game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .Sheep;
+                game.board[ANIMAL_POSITION_ARRAY[i]].count++;
+                game.sheep[3*1+j].cubeNumber = ANIMAL_POSITION_ARRAY[i];
             }
             
         }
@@ -65,12 +68,15 @@ class GameScene: SKScene {
             var imageName:String = "wolf\(i+1)";
             var wolfTexture = SKTexture(imageNamed: imageName);
             
-            wolf[i] = SKSpriteNode(texture:wolfTexture);
-            println("wolf width:\(wolf[i]?.size.width),height:\(wolf[i]?.size.height)")
-            wolf[i]?.setScale(screen.bounds.size.width/boardSize.width*0.8)
+            game.wolf[i].sprite = SKSpriteNode(texture:wolfTexture);
+            println("wolf width:\(game.wolf[i].sprite.size.width),height:\(game.wolf[i].sprite.size.height)")
+            game.wolf[i].sprite.setScale(screen.bounds.size.width/boardSize.width*0.8)
             //狼占上方2、4格
-            wolf[i]!.position = CGPointMake(boardPosition.x-boardSize.width/5*(3-ANIMAL_POSITION_ARRAY[i]),boardPosition.y+boardSize.height/6*2.5)
-            self.addChild(wolf[i]);
+            game.wolf[i].sprite.position = CGPointMake(boardPosition.x-boardSize.width/5*(3-ANIMAL_POSITION_ARRAY[i]),boardPosition.y+boardSize.height/6*2.5)
+            self.addChild(game.wolf[i].sprite);
+            game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .Wolf;
+            game.board[ANIMAL_POSITION_ARRAY[i]].count++;
+            game.wolf[i].cubeNumber = ANIMAL_POSITION_ARRAY[i];
         }
 
     }
