@@ -5,7 +5,7 @@
 //  Created by 张宏台 on 14-9-4.
 //  Copyright (c) 2014年 张宏台. All rights reserved.
 //
-
+import SpriteKit
 
 
 struct WSPoint {
@@ -42,7 +42,7 @@ class WolfSheepGame:WSGame {
         board = [WSPoint](count:BOARD_COLUMNS*BOARD_ROWS,repeatedValue:initPoint);
         var initSheep = WSSheep(cubeNumber:0,sprite:SKSpriteNode());
         sheep = [WSSheep](count:SHEEP_GROUP*3,repeatedValue:initSheep);
-        var  initWolf = WSWolf(cubeNumber:BOARD_COLUMNS*BOARD_ROWS-1,sprite:SKSpriteNode()));
+        var  initWolf = WSWolf(cubeNumber:BOARD_COLUMNS*BOARD_ROWS-1,sprite:SKSpriteNode());
         wolf = [WSWolf](count:WOLF_NUMBER,repeatedValue:initWolf);
     }
 

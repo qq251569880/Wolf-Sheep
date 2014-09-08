@@ -12,7 +12,7 @@ let BOARD_COLUMNS = 5;
 let BOARD_ROWS = 6;
 let SHEEP_GROUP:Int = 3;
 let WOLF_NUMBER:Int = 2;
-let ANIMAL_POSITION_ARRAY:[CGFloat] = [2,4,3,1,5];
+let ANIMAL_POSITION_ARRAY:[Int] = [2,4,3,1,5];
 
 
 enum WSPointState{

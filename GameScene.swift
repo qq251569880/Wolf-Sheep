@@ -8,7 +8,7 @@
 
 import SpriteKit
 
-class GameScene: SKScene {
+class GameScene: SKScene ,WSGameDelegate{
     
     var game = WolfSheepGame();
     
@@ -55,7 +55,7 @@ class GameScene: SKScene {
                 //它的初始位置是25格的最左最下的方格。计算方法是以25格图中心点为参考
                 //羊占下方234格，每个格3只羊。
 
-                game.sheep[3*i+j].sprite.position = CGPointMake(boardPosition.x-boardSize.width/5*(3-ANIMAL_POSITION_ARRAY[i]),boardPosition.y-boardSize.height/6*2.5)
+                game.sheep[3*i+j].sprite.position = CGPointMake(boardPosition.x-boardSize.width/5*(3-(CGFloat)(ANIMAL_POSITION_ARRAY[i])),boardPosition.y-boardSize.height/6*2.5)
                 self.addChild(game.sheep[3*i+j].sprite);
                 game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .Sheep;
                 game.board[ANIMAL_POSITION_ARRAY[i]].count++;
@@ -72,7 +72,7 @@ class GameScene: SKScene {
             println("wolf width:\(game.wolf[i].sprite.size.width),height:\(game.wolf[i].sprite.size.height)")
             game.wolf[i].sprite.setScale(screen.bounds.size.width/boardSize.width*0.8)
             //狼占上方2、4格
-            game.wolf[i].sprite.position = CGPointMake(boardPosition.x-boardSize.width/5*(3-ANIMAL_POSITION_ARRAY[i]),boardPosition.y+boardSize.height/6*2.5)
+            game.wolf[i].sprite.position = CGPointMake(boardPosition.x-boardSize.width/5*(3-(CGFloat)(ANIMAL_POSITION_ARRAY[i])),boardPosition.y+boardSize.height/6*2.5)
             self.addChild(game.wolf[i].sprite);
             game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .Wolf;
             game.board[ANIMAL_POSITION_ARRAY[i]].count++;
@@ -92,5 +92,8 @@ class GameScene: SKScene {
    
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
+    }
+    func gameStart(game:WSGame) {
+        
     }
 }
