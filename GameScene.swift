@@ -49,7 +49,7 @@ class GameScene: SKScene ,WSGameDelegate{
         tipLabel.text = "Welcome to Wolf & Sheep";
         tipLabel.fontSize = 20;
         tipLabel.position = CGPoint(x:CGRectGetMidX(self.frame), y:self.frame.size.height-50);
-        
+        self.addChild(tipLabel);
 
         game.delegate = self;
 
@@ -90,10 +90,13 @@ class GameScene: SKScene ,WSGameDelegate{
         }
         //隐藏选中框
         blueBound.hidden = true;
+        blueBound.setScale(screen.bounds.size.width/boardSize.width*0.8)
         self.addChild(blueBound);
         redBound1.hidden = true;
+        redBound1.setScale(screen.bounds.size.width/boardSize.width*0.8)
         self.addChild(redBound1);
         redBound2.hidden = true;
+        redBound2.setScale(screen.bounds.size.width/boardSize.width*0.8)
         self.addChild(redBound2);
         game.play();
     }
@@ -118,18 +121,18 @@ topFor:for touch: AnyObject in touches {
                 game.selectBlank(selectCube);
                 break topFor;
             }
-sheepFor:   for (i:Int = 0;i<3*SHEEP_GROUP,i++) {
-                if node === game.sheep[i] {
+    sheepFor:   for (var i:Int = 0;i<3*SHEEP_GROUP;i++) {
+                if node === game.sheep[i].sprite {
                     //添加选中羊的操作
-                    game.selectAnimal(node,spriteType:.Sheep,index:i);
+                    game.selectAnimal(game.sheep[i].sprite,spriteType:.Sheep,index:i);
                     break topFor;
                 }
             }
-wolfFor:    for (i:Int = 0;i<WOLF_NUMBER,i++){
-                if node === game.wolf[i] {
+    wolfFor:    for (var i:Int = 0;i<WOLF_NUMBER;i++){
+                if node === game.wolf[i].sprite {
                     //添加选中狼的操作
                     
-                    game.selectAnimal(node,spriteType:.Wolf,index:i);
+                    game.selectAnimal(game.wolf[i].sprite,spriteType:.Wolf,index:i);
                     break topFor;
                 }
             }
@@ -148,10 +151,10 @@ wolfFor:    for (i:Int = 0;i<WOLF_NUMBER,i++){
     }
     
     func selectSprite(sprite:SKSpriteNode) {
-        blueSprite.hidden = false;
-        blueSprite.position = sprite.position;
+        blueBound.hidden = false;
+        blueBound.position = sprite.position;
     }
     func unselectSprite(sprite:SKSpriteNode) {
-        blueSprite.hidden = true;
+        blueBound.hidden = true;
     }
 }

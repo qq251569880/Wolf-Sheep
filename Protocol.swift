@@ -32,7 +32,10 @@ protocol WSGame{
 }
 
 protocol WSGameDelegate{
+
     func gameDisplay(text:String);
+    func selectSprite(sprite:SKSpriteNode);
+    func unselectSprite(sprite:SKSpriteNode);
 }
 
 class WolfSheepGame:WSGame {
@@ -55,7 +58,7 @@ class WolfSheepGame:WSGame {
 
     func play(){
         //开始游戏，标题标签显示“游戏开始”,游戏进入初始化状态。
-        delegate.gameDisplay("游戏开始，请小羊移动");
+        delegate!.gameDisplay("游戏开始，请小羊移动");
         gameStage = .SheepTurn;
         selectedAnimal = -1;
 
@@ -66,41 +69,49 @@ class WolfSheepGame:WSGame {
     func selectAnimal(sprite:SKSpriteNode,spriteType:WSPointState,index:Int){
         switch gameStage{
             case .SheepTurn:
-                if(spriteType == .Sheep){
-                    delegate.selectSprite(sprite);
+                if(spriteType == WSPointState.Sheep){
+                    delegate!.selectSprite(sprite);
                     selectedAnimal = index;
                     gameStage = .SheepSelect;
                 }
             case .SheepSelect:
                 if(spriteType == .Sheep){
                     if(index == selectedAnimal){
-                        delegate.unselectSprite(sprite);
+                        delegate!.unselectSprite(sprite);
+                        selectedAnimal = index;
+                        gameStage = .SheepTurn;
                     }
                     else{
-                        delegate.selectSprite(sprite);
+                        delegate!.selectSprite(sprite);
+                        selectedAnimal = index;
+                        gameStage = .SheepSelect;
                     }
                 }else if(spriteType == .Wolf){
-                    delegate.gameDisplay("小羊是吃不了大灰狼的哦!");
+                    delegate!.gameDisplay("小羊是吃不了大灰狼的哦!");
                 }else{
                     println("sprite类型异常")
                 }
             case .WolfTurn:
                 if(spriteType == .Wolf){
-                    delegate.selectSprite(sprite);
+                    delegate!.selectSprite(sprite);
                     selectedAnimal = index;
                     gameStage = .WolfSelect;
                 }
             case .WolfSelect:
                 if(spriteType == .Sheep){
-                    if(validMove(wolf[selectedAnimal].cubeNumber,sheep[index].cubeNumber)){
+                    if(validMove(wolf[selectedAnimal].cubeNumber,end: sheep[index].cubeNumber)){
                         //开始移动sprite的动画
                     }
                 }else if(spriteType == .Wolf){
                     if(index == selectedAnimal){
-                        delegate.unselectSprite(sprite);
+                        delegate!.unselectSprite(sprite);
+                        selectedAnimal = index;
+                        gameStage = .WolfTurn;
                     }
                     else{
-                        delegate.selectSprite(sprite);
+                        delegate!.selectSprite(sprite);
+                        selectedAnimal = index;
+                        gameStage = .WolfSelect;
                     }
                 }else{
                     println("sprite类型异常")
@@ -119,9 +130,9 @@ class WolfSheepGame:WSGame {
 
     }
     //内部方法
-    function validMove(start:Int,end:Int) -> Bool{
+    func validMove(start:Int,end:Int) -> Bool {
         var up:Int;
-        if(start <25){
+        if(start < 25){
             up = start+5;
             if(end == up){
                 if(board[start].pointState == .Wolf){
@@ -130,27 +141,27 @@ class WolfSheepGame:WSGame {
                             var upup = up + 5;
                             if(board[upup].pointState == .Sheep)
                             {
-                                delegate.gameDisplay("大灰狼不能一口吃掉两只小羊!");
+                                delegate!.gameDisplay("大灰狼不能一口吃掉两只小羊!");
                             }else if(board[upup].pointState == .None){
                                 return true;
                             }else{
-                                delegate.gameDisplay("落脚地已经被另一头狼占据!");
+                                delegate!.gameDisplay("落脚地已经被另一头狼占据!");
                             }
                         }else{
-                            delegate.gameDisplay("场地空间不允许狼吃小羊");
+                            delegate!.gameDisplay("场地空间不允许狼吃小羊");
                         }
                     }else if(board[end].pointState == .None){
                         return true;
                     }else{
-                            delegate.gameDisplay("前面是一头狼");
+                            delegate!.gameDisplay("前面是一头狼");
                     }
                 }else if(board[start].pointState == .Sheep){
                     if(board[end].pointState == .Sheep){
-                         delegate.gameDisplay("前面是另一只小羊");
+                         delegate!.gameDisplay("前面是另一只小羊");
                     }else if(board[end].pointState == .None){
                         return true;
                     }else{
-                        delegate.gameDisplay("小羊不能吃掉一头狼");
+                        delegate!.gameDisplay("小羊不能吃掉一头狼");
                     }
                 }else{
                     println("start point have no animal");
