@@ -10,13 +10,16 @@ import SpriteKit
 
 class GameScene: SKScene ,WSGameDelegate{
     
-    var game = WolfSheepGame();
+    let game = WolfSheepGame();
     
     var boardPosition:CGPoint = CGPointMake(0,0);
     var boardSize:CGSize = CGSize(width: 0,height: 0);
     var backgroundBoard = SKSpriteNode();
-       
-    
+    var tipLabel = SKLabelNode();
+
+    var blueBound = SKSpriteNode(imageNamed:"blue");
+    var redBound1 = SKSpriteNode(imageNamed:"red");
+    var redBound2 = SKSpriteNode(imageNamed:"red");
     override func didMoveToView(view: SKView) {
         /* Setup your scene here */
         ////设置背景颜色
@@ -41,6 +44,13 @@ class GameScene: SKScene ,WSGameDelegate{
         boardPosition = backgroundBoard.position
         self.addChild(backgroundBoard)
         
+
+        tipLabel = SKLabelNode(fontNamed:"Chalkduster")
+        tipLabel.text = "Welcome to Wolf & Sheep";
+        tipLabel.fontSize = 20;
+        tipLabel.position = CGPoint(x:CGRectGetMidX(self.frame), y:self.frame.size.height-50);
+        
+
         game.delegate = self;
 
         //添加小羊3*3
@@ -78,22 +88,70 @@ class GameScene: SKScene ,WSGameDelegate{
             game.board[ANIMAL_POSITION_ARRAY[i]].count++;
             game.wolf[i].cubeNumber = ANIMAL_POSITION_ARRAY[i];
         }
-
+        //隐藏选中框
+        blueBound.hidden = true;
+        self.addChild(blueBound);
+        redBound1.hidden = true;
+        self.addChild(redBound1);
+        redBound2.hidden = true;
+        self.addChild(redBound2);
+        game.play();
     }
     
     override func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
         /* Called when a touch begins */
         
-        for touch: AnyObject in touches {
-            let location = touch.locationInNode(self)
-            
+topFor:for touch: AnyObject in touches {
+            let location = touch.locationInNode(self);
+            //下面的方法返回第一个该位置的sprite，理论上应该是最上层的一个sprite
+            let node = self.nodeAtPoint(location);
+            if node === backgroundBoard{
+                //查询位置
+                var cubeWidth = boardSize.width/5;
+                var cubeHeight = boardSize.height/6;
+                var origin = CGPointMake(boardPosition.x - cubeWidth*2.5,boardPosition.y - cubeHeight*3);
+                var x = location.x-origin.x;
+                var y = location.y-origin.y;
+                var cx = (Int)(x/cubeWidth);
+                var cy = (Int)(y/cubeHeight);
+                var selectCube = cx+5*cy;
+                game.selectBlank(selectCube);
+                break topFor;
+            }
+sheepFor:   for (i:Int = 0;i<3*SHEEP_GROUP,i++) {
+                if node === game.sheep[i] {
+                    //添加选中羊的操作
+                    game.selectAnimal(node,spriteType:.Sheep,index:i);
+                    break topFor;
+                }
+            }
+wolfFor:    for (i:Int = 0;i<WOLF_NUMBER,i++){
+                if node === game.wolf[i] {
+                    //添加选中狼的操作
+                    
+                    game.selectAnimal(node,spriteType:.Wolf,index:i);
+                    break topFor;
+                }
+            }
         }
     }
    
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
     }
-    func gameStart(game:WSGame) {
-        
+
+
+
+    //下面是WSGameDelegate方法
+    func gameDisplay(text:String) {
+         tipLabel.text = text;
+    }
+    
+    func selectSprite(sprite:SKSpriteNode) {
+        blueSprite.hidden = false;
+        blueSprite.position = sprite.position;
+    }
+    func unselectSprite(sprite:SKSpriteNode) {
+        blueSprite.hidden = true;
     }
 }

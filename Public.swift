@@ -20,3 +20,14 @@ enum WSPointState{
     case Sheep
     case Wolf
 }
+enum WSGameStage{
+    case Ready
+    case SheepTurn
+    case SheepSelect
+    case SheepMove
+    case WolfTurn
+    case WolfSelect
+    case WolfMove
+    case Suspend
+    case End
+}
