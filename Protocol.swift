@@ -11,15 +11,18 @@ import SpriteKit
 struct WSPoint {
     var pointState:WSPointState{
         didSet {
-            if pointState == .None{
+            if pointState == .None {
                 count = 0;
             }
+        }
     }
     var count:Int{
         didSet {
-            if count == 0{
+            if count == 0 {
                 pointState = .None;
+                
             }
+        }
     }
     var position:CGPoint;
 }
@@ -48,7 +51,7 @@ protocol WSGameDelegate{
     func gameDisplay(text:String);
     func selectSprite(sprite:SKSpriteNode);
     func unselectSprite(sprite:SKSpriteNode);
-    func moveSprite(sprite:SKNodeSprite,start:Int,end:Int,eatenSheep:SKNodeSprite? = nil);
+    func moveSprite(sprite:SKSpriteNode,start:Int,end:Int,eatenSheep:SKSpriteNode?);
     func gameOver(winner:String);
 }
 
@@ -60,7 +63,7 @@ class WolfSheepGame:WSGame {
     var gameStage:WSGameStage;
     var selectedAnimal:Int;
     init(){
-        var initPoint = WSPoint(pointState:.None,count:0,point:CGPointMake(0,0));
+        var initPoint = WSPoint(pointState:.None,count:0,position:CGPointMake(0,0));
         board = [WSPoint](count:BOARD_COLUMNS*BOARD_ROWS,repeatedValue:initPoint);
         var initSheep = WSSheep(cubeNumber:0,sprite:SKSpriteNode());
         sheep = [WSSheep](count:SHEEP_GROUP*3,repeatedValue:initSheep);
@@ -70,12 +73,13 @@ class WolfSheepGame:WSGame {
         selectedAnimal = -1;
     }
     func setPointPosition(origin:CGPoint,size:CGSize){
+        println(origin)
         for(var i:Int = 0;i < BOARD_COLUMNS*BOARD_ROWS;i++){
-            var x = i % 5;
-            var y = i / 5;
-            var px = origin.x + size.width/BOARD_COLUMNS;
-            var py = origin.y + size.height/BOARD_ROWS;
-            board[i].position = CFPointMake(px,py);
+            var x = i % 5 ;
+            var y = i / 5 ;
+            var px:CGFloat = origin.x + (size.width/CGFloat(BOARD_COLUMNS))*CGFloat(x);
+            var py:CGFloat = origin.y + (size.height/CGFloat(BOARD_ROWS))*CGFloat(y);
+            board[i].position = CGPointMake(px,py);
         }
     }
     func play(){
@@ -95,6 +99,7 @@ class WolfSheepGame:WSGame {
                 if(spriteType == WSPointState.Sheep){
                     delegate!.selectSprite(sprite);
                     selectedAnimal = index;
+                    println("select sheep:\(index)")
                     gameStage = .SheepSelect;
                 }
             case .SheepSelect:
@@ -121,15 +126,19 @@ class WolfSheepGame:WSGame {
                 }
             case .WolfSelect:
                 if(spriteType == .Sheep){
-                    if(let num = validMove(wolf[selectedAnimal].cubeNumber,end: sheep[index].cubeNumber)){
+                    var num = validMove(wolf[selectedAnimal].cubeNumber,end: sheep[index].cubeNumber);
+                    if( num != nil){
                         //开始移动sprite的动画
                         gameStage = .WolfMove;
-                        delegate!.moveSprite(wolf[selectedAnimal].sprite,wolf[selectedAnimal].cubeNumber,num,sheep[index].sprite);
-                        sheep[index].cubeNumber = -1;
+                        delegate!.moveSprite(wolf[selectedAnimal].sprite,start: wolf[selectedAnimal].cubeNumber,end: num!,eatenSheep: sheep[index].sprite);
                         board[sheep[index].cubeNumber].count--
                         board[wolf[selectedAnimal].cubeNumber].pointState = .None;
-                        wolf[selectedAnimal].cubeNumber = num;
-                        board[num].pointState = .Wolf;
+                        wolf[selectedAnimal].cubeNumber = num!;
+                        board[num!].pointState = .Wolf;
+                        board[num!].count++;
+                        //羊被吃掉的标志
+                        sheep[index].cubeNumber = -1;
+
                     }
                 }else if(spriteType == .Wolf){
                     if(index == selectedAnimal){
@@ -144,8 +153,7 @@ class WolfSheepGame:WSGame {
                 }else{
                     println("sprite类型异常")
                 }
-            case .WolfMove:
-            case .SheepMove:
+            case .WolfMove, .SheepMove:
                     delegate!.gameDisplay("动物正在移动，请稍等!");
             default:
                     println("stage异常，当前状态为\(gameStage)");
@@ -156,28 +164,32 @@ class WolfSheepGame:WSGame {
     func selectBlank(cubeNumber:Int){
         switch gameStage{
             case .SheepSelect:
-                if(let num = validMove(sheep[selectedAnimal].cubeNumber,end: cubeNumber)){
+                println("current animal \(selectedAnimal) cube is \(sheep[selectedAnimal].cubeNumber)")
+                var num = validMove(sheep[selectedAnimal].cubeNumber,end: cubeNumber);
+                if(num != nil){
                     //开始移动sprite的动画
                     gameStage = .SheepMove;
-                    delegate!.moveSprite(sheep[selectedAnimal].sprite,sheep[selectedAnimal].cubeNumber,num);
+                    delegate!.moveSprite(sheep[selectedAnimal].sprite,start: sheep[selectedAnimal].cubeNumber,end: num!,eatenSheep: nil);
                     board[sheep[selectedAnimal].cubeNumber].count--;
-                    sheep[selectedAnimal].cubeNumber = num;
-                    board[num].pointState = .Sheep;
+                    sheep[selectedAnimal].cubeNumber = num!;
+                    board[num!].pointState = .Sheep;
+                    board[num!].count++;
                 }
             case .WolfSelect:
-                if(let num = validMove(wolf[selectedAnimal].cubeNumber,end: cubeNumber)){
+                let num = validMove(wolf[selectedAnimal].cubeNumber,end: cubeNumber)
+                if(num != nil){
                     //开始移动sprite的动画
-                    sgameStage = .WolfMove;
-                    delegate!.moveSprite(wolf[selectedAnimal].sprite,wolf[selectedAnimal].cubeNumber,num);
+                    gameStage = .WolfMove;
+                    delegate!.moveSprite(wolf[selectedAnimal].sprite,start: wolf[selectedAnimal].cubeNumber,end: num!,eatenSheep: nil);
                     board[wolf[selectedAnimal].cubeNumber].pointState = .None;
-                    wolf[selectedAnimal].cubeNumber = num;
-                    board[num].pointState = .Wolf;
+                    wolf[selectedAnimal].cubeNumber = num!;
+                    board[num!].pointState = .Wolf;
+                    board[num!].count++;
+
                 }
-            case .SheepTurn:
-            case .WolfTurn:
+            case .SheepTurn,.WolfTurn:
                 delegate!.gameDisplay("请选择要移动的动物!");
-            case .SheepMove:
-            case .WolfMove:
+            case .SheepMove,.WolfMove:
                 delegate!.gameDisplay("动物正在移动，请稍等!");
             default:
                 println("stage异常，当前状态为\(gameStage)");
@@ -202,22 +214,26 @@ class WolfSheepGame:WSGame {
         for(var i:Int = 0;i < WOLF_NUMBER;i++){
             var cpos = wolf[i].cubeNumber;
             if(judgeUp(cpos)){
-                if(let ret = validMove(cpos,stepUp(cpos))){
+                let ret = validMove(cpos,end: stepUp(cpos))
+                if(ret != nil){
                     return false;
                 }
             }
             if(judgeBottom(cpos)){
-                if(let ret = validMove(cpos,stepBotton(cpos))){
+                let ret = validMove(cpos,end: stepBottom(cpos))
+                if(ret != nil){
                     return false;
                 }
             }
             if(judgeLeft(cpos)){
-                if(let ret = validMove(cpos,stepLeft(cpos))){
+                let ret = validMove(cpos,end: stepLeft(cpos))
+                if(ret != nil){
                     return false;
                 }
             }
             if(judgeRight(cpos)){
-                if(let ret = validMove(cpos,stepRight(cpos))){
+                let ret = validMove(cpos,end: stepRight(cpos))
+                if(ret != nil){
                     return false;
                 }
             }
@@ -238,27 +254,31 @@ class WolfSheepGame:WSGame {
     }
     func validMove(start:Int,end:Int) -> Int? {
         //上
-        if(let ret = directionJudge(start,end,judgeUp,stepUp)){
-            return ret;
+        let retUp = directionJudge(start,end: end,judgeUp,stepUp)
+        if(retUp != nil){
+            return retUp;
         }
         //下
-        if(let ret = directionJudge(start,end,judgeBottom,stepBottom)){
-            return ret;
+        let retB = directionJudge(start,end: end,judgeBottom,stepBottom)
+        if(retB != nil){
+            return retB;
         }
         //左
-        if(let ret = directionJudge(start,end,judgeLeft,stepLeft)){
-            return ret;
+        let retL = directionJudge(start,end: end,judgeLeft,stepLeft)
+        if(retL != nil){
+            return retL;
         }
         //右
-        if(let ret = directionJudge(start,end,judgeRight,stepRight)){
-            return ret;
+        let retR = directionJudge(start,end: end,judgeRight,stepRight)
+        if(retR != nil){
+            return retR;
         }
 
         return nil;
     }
-    func directionJudge(start:Int,end:Int,judge:(Int) -> Bool),stepNext:(Int) -> Int )->Int?{
+    func directionJudge(start:Int,end:Int,judge:(Int) -> Bool,stepNext:(Int) -> Int )->Int?{
         if(judge(start)){
-            nextStep = stepNext(start);
+            var nextStep = stepNext(start);
             if(end == nextStep){
                 if(board[start].pointState == .Wolf){
                     if(board[end].pointState == .Sheep){
@@ -292,7 +312,7 @@ class WolfSheepGame:WSGame {
                     println("start point have no animal");
                 }
             }else{
-                if(board[start].pointState == .Wolf && board[nextStep].pointState = .Sheep){
+                if(board[start].pointState == .Wolf && board[nextStep].pointState == .Sheep){
                     if(judge(nextStep)){
                         var nextNextStep = stepNext(nextStep);
                         if(end == nextNextStep && board[end].pointState == .None){

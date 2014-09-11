@@ -54,8 +54,8 @@ class GameScene: SKScene ,WSGameDelegate{
 
         game.delegate = self;
         //设置每个方格的中心位置
-        var originPos =  CGPointMake(boardPosition.x-boardSize.width/BOARD_COLUMNS*2,boardPosition.y-boardSize.height/BOARD_ROWS*2.5);
-        game.setPointPosition(originPos,boardSize);
+        var originPos =  CGPointMake(boardPosition.x-boardSize.width/CGFloat(BOARD_COLUMNS)*2,boardPosition.y-boardSize.height/CGFloat(BOARD_ROWS)*2.5);
+        game.setPointPosition(originPos,size: boardSize);
         //添加小羊3*3
         for i:Int in 0..<SHEEP_GROUP {
             var imageName:String = "sheep\(i+1)";
@@ -63,17 +63,17 @@ class GameScene: SKScene ,WSGameDelegate{
                 var sheepTexture = SKTexture(imageNamed: imageName);
 
                 game.sheep[3*i+j].sprite = SKSpriteNode(texture:sheepTexture);
-                println("sheep width:\(game.sheep[3*i+j].sprite.size.width),height:\(game.sheep[3*i+j].sprite.size.height)")
                 game.sheep[3*i+j].sprite.setScale(screen.bounds.size.width/boardSize.width*0.8);
                 //它的初始位置是25格的最左最下的方格。计算方法是以25格图中心点为参考
                 //羊占下方234格，每个格3只羊。
 
                 game.sheep[3*i+j].sprite.position = game.board[ANIMAL_POSITION_ARRAY[i]].position;
-                game.sheep[3*i+j].sprite.zPosition = 10+3*i+j
+                //println("sheep x:\(game.sheep[3*i+j].sprite.position.x),y:\(game.sheep[3*i+j].sprite.position.y)")
+                game.sheep[3*i+j].sprite.zPosition = CGFloat(10+3*i+j)
                 self.addChild(game.sheep[3*i+j].sprite);
                 game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .Sheep;
                 game.board[ANIMAL_POSITION_ARRAY[i]].count++;
-                game.sheep[3*1+j].cubeNumber = ANIMAL_POSITION_ARRAY[i];
+                game.sheep[3*i+j].cubeNumber = ANIMAL_POSITION_ARRAY[i];
             }
             
         }
@@ -83,12 +83,12 @@ class GameScene: SKScene ,WSGameDelegate{
             var wolfTexture = SKTexture(imageNamed: imageName);
             
             game.wolf[i].sprite = SKSpriteNode(texture:wolfTexture);
-            println("wolf width:\(game.wolf[i].sprite.size.width),height:\(game.wolf[i].sprite.size.height)")
+            //println("wolf width:\(game.wolf[i].sprite.size.width),height:\(game.wolf[i].sprite.size.height)")
             game.wolf[i].sprite.setScale(screen.bounds.size.width/boardSize.width*0.8)
             //狼占上方2、4格
             var topRow = BOARD_COLUMNS*(BOARD_ROWS-1);
             game.wolf[i].sprite.position = game.board[ANIMAL_POSITION_ARRAY[i]+topRow].position;
-            game.wolf[i].sprite.zPosition = 20+i
+            game.wolf[i].sprite.zPosition = CGFloat(20+i);
             self.addChild(game.wolf[i].sprite);
             game.board[ANIMAL_POSITION_ARRAY[i]+topRow].pointState = .Wolf;
             game.board[ANIMAL_POSITION_ARRAY[i]+topRow].count++;
@@ -126,6 +126,7 @@ topFor:for touch: AnyObject in touches {
                 var y = location.y-origin.y;
                 var cx = (Int)(x/cubeWidth);
                 var cy = (Int)(y/cubeHeight);
+                
                 var selectCube = cx+5*cy;
                 game.selectBlank(selectCube);
                 break topFor;
@@ -157,14 +158,14 @@ topFor:for touch: AnyObject in touches {
     //下面是WSGameDelegate方法
     func initSprite(){
         for(var i:Int = 0;i < BOARD_COLUMNS*BOARD_ROWS;i++){
-                game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .None;
+                game.board[i].pointState = .None;
         }
         for i:Int in 0..<SHEEP_GROUP {
             for j:Int in 0..<3 {
                 game.sheep[3*i+j].sprite.position = game.board[ANIMAL_POSITION_ARRAY[i]].position;
                 game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .Sheep;
                 game.board[ANIMAL_POSITION_ARRAY[i]].count++;
-                game.sheep[3*1+j].cubeNumber = ANIMAL_POSITION_ARRAY[i];
+                game.sheep[3*i+j].cubeNumber = ANIMAL_POSITION_ARRAY[i];
             }
             
         }
@@ -192,13 +193,15 @@ topFor:for touch: AnyObject in touches {
     func unselectSprite(sprite:SKSpriteNode) {
         blueBound.hidden = true;
     }
-    func moveSprite(sprite:SKNodeSprite,start:Int,end:Int,eatenSheep:SKNodeSprite? = nil){
-        var distance = sqrt(pow(game.board[end].x-game.board[start].x,2)+pow(game.board[end].y-game.board[start].y,2));
+    func moveSprite(sprite:SKSpriteNode,start:Int,end:Int,eatenSheep:SKSpriteNode? = nil){
+        var xx = pow(game.board[end].position.x-game.board[start].position.x,2);
+        var yy = pow(game.board[end].position.y-game.board[start].position.y,2);
+        var distance = sqrt(xx+yy);
         var actionMove = SKAction.moveTo(game.board[end].position,duration:NSTimeInterval(0.01*distance));
         if(eatenSheep != nil){
-            var actionFade = SKAction.fadeOut(0.25);
+            var actionFade = SKAction.fadeOutWithDuration(0.25);
             sprite.runAction(actionMove,completion:actionEnd);
-            eatenSheep.runAction(actionFade);
+            eatenSheep!.runAction(actionFade);
         }else{
             sprite.runAction(actionMove,completion:actionEnd);
         }

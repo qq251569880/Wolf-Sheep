@@ -48,14 +48,14 @@ func stepBottom(number:Int) -> Int {
 }
 //左
 func judgeLeft(number:Int) -> Bool {
-    return number % 5;
+    return (number % 5 != 0);
 }
 func stepLeft(number:Int) -> Int {
     return number-1;
 }
 //右
 func judgeRight(number:Int) -> Bool {
-    return (number+1) % 5;
+    return ((number+1) % 5 != 0);
 }
 func stepRight(number:Int) -> Int {
     return number + 1;
