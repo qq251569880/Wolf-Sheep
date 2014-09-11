@@ -41,6 +41,7 @@ class GameScene: SKScene ,WSGameDelegate{
         
         //它的位置是左右居中。Scene的Y轴是由下至上的，所以是屏幕高度除以2+100，即中间靠上的位置
         backgroundBoard.position = CGPointMake(self.frame.size.width/2,backgroundBoard.size.height/2+150)
+        backgroundBoard.zPosition = 0;
         boardPosition = backgroundBoard.position
         self.addChild(backgroundBoard)
         
@@ -52,7 +53,9 @@ class GameScene: SKScene ,WSGameDelegate{
         self.addChild(tipLabel);
 
         game.delegate = self;
-
+        //设置每个方格的中心位置
+        var originPos =  CGPointMake(boardPosition.x-boardSize.width/BOARD_COLUMNS*2,boardPosition.y-boardSize.height/BOARD_ROWS*2.5);
+        game.setPointPosition(originPos,boardSize);
         //添加小羊3*3
         for i:Int in 0..<SHEEP_GROUP {
             var imageName:String = "sheep\(i+1)";
@@ -65,7 +68,8 @@ class GameScene: SKScene ,WSGameDelegate{
                 //它的初始位置是25格的最左最下的方格。计算方法是以25格图中心点为参考
                 //羊占下方234格，每个格3只羊。
 
-                game.sheep[3*i+j].sprite.position = CGPointMake(boardPosition.x-boardSize.width/5*(3-(CGFloat)(ANIMAL_POSITION_ARRAY[i])),boardPosition.y-boardSize.height/6*2.5)
+                game.sheep[3*i+j].sprite.position = game.board[ANIMAL_POSITION_ARRAY[i]].position;
+                game.sheep[3*i+j].sprite.zPosition = 10+3*i+j
                 self.addChild(game.sheep[3*i+j].sprite);
                 game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .Sheep;
                 game.board[ANIMAL_POSITION_ARRAY[i]].count++;
@@ -82,21 +86,26 @@ class GameScene: SKScene ,WSGameDelegate{
             println("wolf width:\(game.wolf[i].sprite.size.width),height:\(game.wolf[i].sprite.size.height)")
             game.wolf[i].sprite.setScale(screen.bounds.size.width/boardSize.width*0.8)
             //狼占上方2、4格
-            game.wolf[i].sprite.position = CGPointMake(boardPosition.x-boardSize.width/5*(3-(CGFloat)(ANIMAL_POSITION_ARRAY[i])),boardPosition.y+boardSize.height/6*2.5)
+            var topRow = BOARD_COLUMNS*(BOARD_ROWS-1);
+            game.wolf[i].sprite.position = game.board[ANIMAL_POSITION_ARRAY[i]+topRow].position;
+            game.wolf[i].sprite.zPosition = 20+i
             self.addChild(game.wolf[i].sprite);
-            game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .Wolf;
-            game.board[ANIMAL_POSITION_ARRAY[i]].count++;
-            game.wolf[i].cubeNumber = ANIMAL_POSITION_ARRAY[i];
+            game.board[ANIMAL_POSITION_ARRAY[i]+topRow].pointState = .Wolf;
+            game.board[ANIMAL_POSITION_ARRAY[i]+topRow].count++;
+            game.wolf[i].cubeNumber = ANIMAL_POSITION_ARRAY[i]+topRow;
         }
         //隐藏选中框
         blueBound.hidden = true;
-        blueBound.setScale(screen.bounds.size.width/boardSize.width*0.8)
+        blueBound.setScale(screen.bounds.size.width/boardSize.width*0.8);
+        blueBound.zPosition = 1;
         self.addChild(blueBound);
         redBound1.hidden = true;
-        redBound1.setScale(screen.bounds.size.width/boardSize.width*0.8)
+        redBound1.setScale(screen.bounds.size.width/boardSize.width*0.8);
+        redBound1.zPosition = 1;
         self.addChild(redBound1);
         redBound2.hidden = true;
-        redBound2.setScale(screen.bounds.size.width/boardSize.width*0.8)
+        redBound2.setScale(screen.bounds.size.width/boardSize.width*0.8);
+        redBound2.zPosition = 1;
         self.addChild(redBound2);
         game.play();
     }
@@ -142,10 +151,36 @@ topFor:for touch: AnyObject in touches {
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
     }
-
+    
 
 
     //下面是WSGameDelegate方法
+    func initSprite(){
+        for(var i:Int = 0;i < BOARD_COLUMNS*BOARD_ROWS;i++){
+                game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .None;
+        }
+        for i:Int in 0..<SHEEP_GROUP {
+            for j:Int in 0..<3 {
+                game.sheep[3*i+j].sprite.position = game.board[ANIMAL_POSITION_ARRAY[i]].position;
+                game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .Sheep;
+                game.board[ANIMAL_POSITION_ARRAY[i]].count++;
+                game.sheep[3*1+j].cubeNumber = ANIMAL_POSITION_ARRAY[i];
+            }
+            
+        }
+        //添加狼*2
+        for i:Int in 0..<WOLF_NUMBER {
+            var topRow = BOARD_COLUMNS*(BOARD_ROWS-1);
+            game.wolf[i].sprite.position = game.board[ANIMAL_POSITION_ARRAY[i]+topRow].position;
+            game.board[ANIMAL_POSITION_ARRAY[i]+topRow].pointState = .Wolf;
+            game.board[ANIMAL_POSITION_ARRAY[i]+topRow].count++;
+            game.wolf[i].cubeNumber = ANIMAL_POSITION_ARRAY[i]+topRow;
+        }
+        //隐藏选中框
+        blueBound.hidden = true;
+        redBound1.hidden = true;
+        redBound2.hidden = true;
+    }
     func gameDisplay(text:String) {
          tipLabel.text = text;
     }
@@ -156,5 +191,40 @@ topFor:for touch: AnyObject in touches {
     }
     func unselectSprite(sprite:SKSpriteNode) {
         blueBound.hidden = true;
+    }
+    func moveSprite(sprite:SKNodeSprite,start:Int,end:Int,eatenSheep:SKNodeSprite? = nil){
+        var distance = sqrt(pow(game.board[end].x-game.board[start].x,2)+pow(game.board[end].y-game.board[start].y,2));
+        var actionMove = SKAction.moveTo(game.board[end].position,duration:NSTimeInterval(0.01*distance));
+        if(eatenSheep != nil){
+            var actionFade = SKAction.fadeOut(0.25);
+            sprite.runAction(actionMove,completion:actionEnd);
+            eatenSheep.runAction(actionFade);
+        }else{
+            sprite.runAction(actionMove,completion:actionEnd);
+        }
+    }
+    func gameOver(winner:String){
+        let tit = NSLocalizedString("提示", comment: "")
+        let msg = NSLocalizedString("恭喜\(winner)获得胜利，是否重新开始？", comment: "")
+        var alert:UIAlertView = UIAlertView();
+        alert.title = tit
+        alert.message = msg
+        alert.delegate = self
+        alert.addButtonWithTitle("确定");
+        alert.addButtonWithTitle("取消");
+        alert.show();
+
+    }
+    //提示框响应方法
+    func alertView(alertView: UIAlertView!, clickedButtonAtIndex buttonIndex: Int){
+        if(buttonIndex == 0){
+            self.game.play();
+        }
+    }
+
+    //自定义方法
+    func actionEnd(){
+
+        game.switchTurn();
     }
 }

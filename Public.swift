@@ -12,7 +12,7 @@ let BOARD_COLUMNS = 5;
 let BOARD_ROWS = 6;
 let SHEEP_GROUP:Int = 3;
 let WOLF_NUMBER:Int = 2;
-let ANIMAL_POSITION_ARRAY:[Int] = [2,4,3,1,5];
+let ANIMAL_POSITION_ARRAY:[Int] = [1,3,2,0,4];
 
 
 enum WSPointState{
@@ -30,4 +30,33 @@ enum WSGameStage{
     case WolfMove
     case Suspend
     case End
+}
+
+//上
+func judgeUp(number:Int) -> Bool {
+    return number < 25;
+}
+func stepUp(number:Int) -> Int {
+    return number+5;
+}
+//下
+func judgeBottom(number:Int) -> Bool {
+    return number > 4;
+}
+func stepBottom(number:Int) -> Int {
+    return number-5;
+}
+//左
+func judgeLeft(number:Int) -> Bool {
+    return number % 5;
+}
+func stepLeft(number:Int) -> Int {
+    return number-1;
+}
+//右
+func judgeRight(number:Int) -> Bool {
+    return (number+1) % 5;
+}
+func stepRight(number:Int) -> Int {
+    return number + 1;
 }
