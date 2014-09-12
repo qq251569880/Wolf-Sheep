@@ -194,6 +194,11 @@ topFor:for touch: AnyObject in touches {
         blueBound.hidden = true;
     }
     func moveSprite(sprite:SKSpriteNode,start:Int,end:Int,eatenSheep:SKSpriteNode? = nil){
+        blueBound.hidden = true;
+        redBound1.position = game.board[start].position;
+        redBound2.position = game.board[end].position;
+        redBound1.hidden = false;
+        redBound2.hidden = false;
         var xx = pow(game.board[end].position.x-game.board[start].position.x,2);
         var yy = pow(game.board[end].position.y-game.board[start].position.y,2);
         var distance = sqrt(xx+yy);
@@ -227,7 +232,7 @@ topFor:for touch: AnyObject in touches {
 
     //自定义方法
     func actionEnd(){
-
+        
         game.switchTurn();
     }
 }
