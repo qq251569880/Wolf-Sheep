@@ -41,7 +41,7 @@ class GameScene: SKScene ,WSGameDelegate{
         
         //它的位置是左右居中。Scene的Y轴是由下至上的，所以是屏幕高度除以2+100，即中间靠上的位置
         backgroundBoard.position = CGPointMake(self.frame.size.width/2,backgroundBoard.size.height/2+150)
-        backgroundBoard.zPosition = 0;
+        backgroundBoard.zPosition = 1;
         boardPosition = backgroundBoard.position
         self.addChild(backgroundBoard)
         
@@ -97,15 +97,15 @@ class GameScene: SKScene ,WSGameDelegate{
         //隐藏选中框
         blueBound.hidden = true;
         blueBound.setScale(screen.bounds.size.width/boardSize.width*0.8);
-        blueBound.zPosition = 1;
+        blueBound.zPosition = 2;
         self.addChild(blueBound);
         redBound1.hidden = true;
         redBound1.setScale(screen.bounds.size.width/boardSize.width*0.8);
-        redBound1.zPosition = 1;
+        redBound1.zPosition = 2;
         self.addChild(redBound1);
         redBound2.hidden = true;
         redBound2.setScale(screen.bounds.size.width/boardSize.width*0.8);
-        redBound2.zPosition = 1;
+        redBound2.zPosition = 2;
         self.addChild(redBound2);
         game.play();
     }
@@ -117,7 +117,7 @@ topFor:for touch: AnyObject in touches {
             let location = touch.locationInNode(self);
             //下面的方法返回第一个该位置的sprite，理论上应该是最上层的一个sprite
             let node = self.nodeAtPoint(location);
-            if node === backgroundBoard{
+            if node === backgroundBoard  || node === blueBound || node === redBound1 || node === redBound2 {
                 //查询位置
                 var cubeWidth = boardSize.width/5;
                 var cubeHeight = boardSize.height/6;
@@ -158,7 +158,8 @@ topFor:for touch: AnyObject in touches {
     //下面是WSGameDelegate方法
     func initSprite(){
         for(var i:Int = 0;i < BOARD_COLUMNS*BOARD_ROWS;i++){
-                game.board[i].pointState = .None;
+
+            game.board[i].count = 0;
         }
         for i:Int in 0..<SHEEP_GROUP {
             for j:Int in 0..<3 {
@@ -166,6 +167,7 @@ topFor:for touch: AnyObject in touches {
                 game.board[ANIMAL_POSITION_ARRAY[i]].pointState = .Sheep;
                 game.board[ANIMAL_POSITION_ARRAY[i]].count++;
                 game.sheep[3*i+j].cubeNumber = ANIMAL_POSITION_ARRAY[i];
+                game.sheep[3*i+j].sprite.zPosition = CGFloat(10+3*i+j);
             }
             
         }
@@ -203,8 +205,15 @@ topFor:for touch: AnyObject in touches {
         var yy = pow(game.board[end].position.y-game.board[start].position.y,2);
         var distance = sqrt(xx+yy);
         var actionMove = SKAction.moveTo(game.board[end].position,duration:NSTimeInterval(0.01*distance));
+        //自定义方法
+        func actionEnd(){
+            if(eatenSheep != nil){
+                eatenSheep!.zPosition = 0
+            }
+            game.switchTurn();
+        }
         if(eatenSheep != nil){
-            var actionFade = SKAction.fadeOutWithDuration(0.25);
+            var actionFade = SKAction.fadeOutWithDuration(0.75);
             sprite.runAction(actionMove,completion:actionEnd);
             eatenSheep!.runAction(actionFade);
         }else{
@@ -230,9 +239,4 @@ topFor:for touch: AnyObject in touches {
         }
     }
 
-    //自定义方法
-    func actionEnd(){
-        
-        game.switchTurn();
-    }
 }

@@ -9,18 +9,12 @@ import SpriteKit
 
 
 struct WSPoint {
-    var pointState:WSPointState{
-        didSet {
-            if pointState == .None {
-                count = 0;
-            }
-        }
-    }
+    var pointState:WSPointState
+    
     var count:Int{
         didSet {
             if count == 0 {
                 pointState = .None;
-                
             }
         }
     }
@@ -132,7 +126,7 @@ class WolfSheepGame:WSGame {
                         gameStage = .WolfMove;
                         delegate!.moveSprite(wolf[selectedAnimal].sprite,start: wolf[selectedAnimal].cubeNumber,end: num!,eatenSheep: sheep[index].sprite);
                         board[sheep[index].cubeNumber].count--
-                        board[wolf[selectedAnimal].cubeNumber].pointState = .None;
+                        board[wolf[selectedAnimal].cubeNumber].count--
                         wolf[selectedAnimal].cubeNumber = num!;
                         board[num!].pointState = .Wolf;
                         board[num!].count++;
@@ -164,7 +158,7 @@ class WolfSheepGame:WSGame {
     func selectBlank(cubeNumber:Int){
         switch gameStage{
             case .SheepSelect:
-                println("current animal \(selectedAnimal) cube is \(sheep[selectedAnimal].cubeNumber)")
+                println("current sheep \(selectedAnimal) cube is \(sheep[selectedAnimal].cubeNumber)")
                 var (num,_) = validMove(sheep[selectedAnimal].cubeNumber,end: cubeNumber);
                 if(num != nil){
                     //开始移动sprite的动画
@@ -176,7 +170,8 @@ class WolfSheepGame:WSGame {
                     board[num!].count++;
                 }
             case .WolfSelect:
-                let (num,eat) = validMove(wolf[selectedAnimal].cubeNumber,end: cubeNumber)
+                println("current wolf \(selectedAnimal) cube is \(sheep[selectedAnimal].cubeNumber)")
+               let (num,eat) = validMove(wolf[selectedAnimal].cubeNumber,end: cubeNumber)
                 if(num != nil){
                     //开始移动sprite的动画
                     var eatSheep:SKSpriteNode? = nil;
@@ -192,11 +187,14 @@ class WolfSheepGame:WSGame {
                     }
                     gameStage = .WolfMove;
                     delegate!.moveSprite(wolf[selectedAnimal].sprite,start: wolf[selectedAnimal].cubeNumber,end: num!,eatenSheep: eatSheep);
-                    board[wolf[selectedAnimal].cubeNumber].pointState = .None;
+                    if eat != nil {
+                        board[eat!].count--
+                    }
+                    board[wolf[selectedAnimal].cubeNumber].count--;
                     wolf[selectedAnimal].cubeNumber = num!;
                     board[num!].pointState = .Wolf;
                     board[num!].count++;
-
+                    
                 }
             case .SheepTurn,.WolfTurn:
                 delegate!.gameDisplay("请选择要移动的动物!");
@@ -264,30 +262,31 @@ class WolfSheepGame:WSGame {
         return true;
     }
     func validMove(start:Int,end:Int) -> (Int?,Int?) {
+        println("start:\(start) = \(board[start].count),end:\(end) = \(board[end].count)")
         //上
-        let (retUp,eat) = directionJudge(start,end: end,judgeUp,stepUp)
+        let (retUp,eatUp) = directionJudge(start,end: end,judgeUp,stepUp)
         if(retUp != nil){
-            return (retUp,eat);
+            return (retUp,eatUp);
         }
         //下
-        let (retB,eat) = directionJudge(start,end: end,judgeBottom,stepBottom)
+        let (retB,eatB) = directionJudge(start,end: end,judgeBottom,stepBottom)
         if(retB != nil){
-            return retB,eat);
+            return (retB,eatB);
         }
         //左
-        let (retL,eat) = directionJudge(start,end: end,judgeLeft,stepLeft)
+        let (retL,eatL) = directionJudge(start,end: end,judgeLeft,stepLeft)
         if(retL != nil){
-            return retL,eat);
+            return (retL,eatL);
         }
         //右
-        let (retR,eat) = directionJudge(start,end: end,judgeRight,stepRight)
+        let (retR,eatR) = directionJudge(start,end: end,judgeRight,stepRight)
         if(retR != nil){
-            return (retR,eat);
+            return (retR,eatR);
         }
 
-        return nil;
+        return (nil,nil);
     }
-    func directionJudge(start:Int,end:Int,judge:(Int) -> Bool,stepNext:(Int) -> Int )->(Int?,Int){
+    func directionJudge(start:Int,end:Int,judge:(Int) -> Bool,stepNext:(Int) -> Int )->(Int?,Int?){
         if(judge(start)){
             var nextStep = stepNext(start);
             if(end == nextStep){
